@@ -41,4 +41,4 @@ import os
 # print(os.path.exists('study\demo'))
 
 #返回路径中的文件和文件夹
-# print(os.path.split('study/test.txt'))
+print(os.path.split('study/test.txt'))
