@@ -4,8 +4,8 @@ def insert():
     print("添加数据：")
     conn = ConnectionMyslq("localhost", "root",
              "Gepoint", "pythondb", 3306)
-    sql = "UPDATE user SET age=26  WHERE rowid=7"
-    #sql = "insert into user(name,age,sex) values('mark',20,'男')"
+    #sql = "UPDATE user SET age=26  WHERE rowid=7"
+    sql = "insert into user(name,age,sex) values('mark',20,'男')"
     conn.exe_sql(sql)
 
 def findlist():
@@ -35,8 +35,8 @@ def updateRecord():
     sql = "UPDATE user SET age=26  WHERE rowid=7"
     conn.exe_sql(sql)
 
-#findlist()
-insert()
+findlist()
+#insert()
 #deleteRecord()
 #updateRecord()
 
