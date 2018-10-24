@@ -2,7 +2,7 @@
 import pymysql
 
 '''
-打开数据库连接
+数据库连接
 '''
 class ConnectionMyslq(object):
     def __init__(self, ip, user_name, passwd, db, port, char='utf8'):
@@ -30,8 +30,9 @@ class ConnectionMyslq(object):
             cursor.execute(MySQL_sql)
             # 获取所有记录列表
             results = cursor.fetchall()
-        except:
+        except Exception:
             print("Error: unable to fetch data")
+            print(Exception)
             self.MySQL_db.close()
         self.MySQL_db.close()
         return results
@@ -44,8 +45,9 @@ class ConnectionMyslq(object):
             # 执行SQL语句
             cursor.execute(MySQL_sql)
             self.MySQL_db.commit()
-        except:
+        except Exception:
             print("Error: unable to fetch data")
+            print(Exception)
             self.MySQL_db.close()
         self.MySQL_db.close()
 
