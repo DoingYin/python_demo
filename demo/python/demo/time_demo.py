@@ -42,6 +42,7 @@ print(loctime3)
 #将时间字符串转换为时间元组
 timestr = '2018-08-08'
 loctime = time.strptime(timestr, '%Y-%m-%d')
+print("*"* 50)
 print(loctime)
 
 #返回当前时间的时间戳。

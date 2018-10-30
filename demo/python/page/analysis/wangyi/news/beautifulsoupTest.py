@@ -107,7 +107,9 @@ def findAll():
                            "Gepoint", "pythondb", 3306)
     sql = 'select * from news_info'
     result = conn.findList(sql)
-    print(result)
+    for info in result:
+        print(info[1])
+        print("——"*20)
 
 
 if __name__ == "__main__":
