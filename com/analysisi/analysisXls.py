@@ -1,11 +1,23 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
+import uuid
+
 import xlrd
 import time
 import datetime
+import json
 from com.database.ConnectDataBase import ConnectionDatabase
 
-# 解析xls文件
+'''
+    数据库连接
+'''
+def getConnect():
+    __conn = ConnectionDatabase("localhost", "sa", "11111", "oa_old")
+    return __conn
+
+'''
+     解析xls文件
+'''
 def analysisXsl():
     workbook=xlrd.open_workbook(r"C:\Users\YinYichang\Desktop\新建 XLSX 工作表.xlsx")
     sheet = workbook.sheet_by_index(0)
@@ -133,13 +145,16 @@ def analysisXsl():
     # print(sheet.row_values(0))
     # return sheet
 
-# 插入数据
+'''
+    插入督查督办数据
+'''
 def insertData(supervision):
-    conn = ConnectionDatabase("localhost", "sa", "11111", "oa_supervision")
+    conn = getConnect()
     sql = "INSERT INTO SJ_SUPERVISION_TASK_REGISTER(rowguid, ordernum, taskname, " \
           "responseouname, peiheouname, registername, registertime, " \
           "typename, typelevel, fenguanname, feedbacktime, feedbackcyvle, isfinished," \
-          "responseoutel, peiheoutel, jobyear) VALUES('%s', %d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', %d)" \
+          "responseoutel, peiheoutel, jobyear) VALUES('%s', %d, '%s', '%s', '%s', '%s'," \
+          " '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', %d)" \
           % (supervision["rowguid"], supervision["ordernum"], supervision["taskname"],
              supervision["responseouname"], supervision["peiheouname"], supervision["registername"],
              supervision["registertime"], supervision["typename"], supervision["typelevl"],
@@ -150,6 +165,9 @@ def insertData(supervision):
     conn.mssql_exe_sql(sql)
     # print("-" * 50, "sqlserver", "-" * 50)
 
+'''
+    解析督查督办xls文件
+'''
 def analysisSupervision():
     path = 'F:\松江OA\OA数据解析\supervision.xlsx'
     sheet = analysisXsl(path)
@@ -157,5 +175,12 @@ def analysisSupervision():
     # for row in sheet.row_values():
     #     print(row)
 
+
+
+
 if __name__ == "__main__":
     analysisXsl()
+    #analysisUser_info()
+    #analusisWd24Opinion()
+    # handle_wd24_flow_test()
+    # workflowListData()

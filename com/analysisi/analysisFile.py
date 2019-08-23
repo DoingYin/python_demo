@@ -4,8 +4,6 @@ import urllib.request
 from xml.dom.minidom import parse
 import xml.dom.minidom
 from com.database.ConnectDataBase import ConnectionDatabase
-import pymysql
-import pymssql
 
 def analysisSupervision():
     file = open('F:\松江OA\OA数据解析\supervision', 'r', encoding='utf-8')
