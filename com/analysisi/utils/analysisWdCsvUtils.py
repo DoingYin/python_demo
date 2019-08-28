@@ -463,6 +463,11 @@ def analysisOpinionCsv(file):
             continue
         opinion['opinionTime'] = opinionTimeStr
         opinion['OPINIONBODY'] = row[5]
+        feedbackunid = None
+        if len(row) > 6:
+            feedbackunid = row[6]
+
+        opinion['feedbackunid'] = feedbackunid
         if insertOpinion(__conn, opinion):
             counter += 1
         if counter % 1000 == 0:
@@ -477,12 +482,12 @@ def analysisOpinionCsv(file):
 def insertOpinion(__conn, opinion):
     __sql = '''
         INSERT INTO opinions (
-            parentunid, OPINIONUSER, OPINIONUSERTITLE, opinionTime, OPINIONBODY, UNID
-        ) VALUES (%s, %s, %s, %s, %s, %s)
+            parentunid, OPINIONUSER, OPINIONUSERTITLE, opinionTime, OPINIONBODY, UNID, feedbackunid
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
     '''
     __params = (
         opinion['parentunid'], opinion['OPINIONUSER'], opinion['OPINIONUSERTITLE'], opinion['opinionTime'],
-        opinion['OPINIONBODY'], opinion['UNID']
+        opinion['OPINIONBODY'], opinion['UNID'], opinion['feedbackunid']
     )
     # print(__sql % __params)
     return __conn.mssql_exe_sql(__sql, __params)

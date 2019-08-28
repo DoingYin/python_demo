@@ -7,6 +7,7 @@ from com.analysisi.utils import analysisWdCsvUtils
 from com.analysisi.utils import analysisFileAttachUtils
 from com.analysisi.utils import analysisDayScheduleUtils
 from com.analysisi.utils import analysisLeaderApproveUtils
+from com.analysisi.utils import analysisSupervisionExcutiveUtils
 
 '''
     读取文件夹下的csv文件
@@ -48,7 +49,10 @@ def readAllFiles(filePath):
                 pass
             # 领导批示件
             elif path.find("leaderApprove") != -1:
-                analysisLeaderApproveUtils.analysisLeaderApproveCsv(file)
+                analysisLeaderApproveUtils.analysisLeaderCsv(file)
+                pass
+            elif path.find("supervision") != -1:
+                analysisSupervisionExcutiveUtils.analysisSupervisionExcutiveCsv(file)
                 pass
         else:
             readAllFiles(path)
@@ -77,11 +81,37 @@ def handleWorkflowListData(note):
 def handleFile(inputForderName, outputForderName, tag):
     analysisFileAttachUtils.handleFile(inputForderName, outputForderName, tag)
 
+'''
+    处理领导批示件单位签收信息
+'''
+def handleSignInfo():
+    analysisLeaderApproveUtils.handleSignInfo()
+
+def handleSignInfo_done():
+    analysisLeaderApproveUtils.handleSignInfo_done()
+
+'''
+    处理单位签收反馈数据
+'''
+def handleSignAndFeedback():
+    analysisLeaderApproveUtils.handleSignFeedback()
+
+'''
+    处理领导批示件签收反馈数据
+'''
+def handleLeaderApproveSignAndFeedback():
+    #处理领导批示件单位签收信息
+    handleSignInfo()
+    #处理领导批示件单位签收情况
+    handleSignInfo_done()
+    ##处理领导批示件单位签收和反馈情况
+    handleSignAndFeedback()
+
 if __name__ == "__main__":
     # testFilePath = "G:\数据解析\csv\workflowcsv"
     testFilePath = "G:\数据解析\csv\wd25csv"
     testFilePath = "G:\数据解析\csv\opinioncsv"
-    testFilePath = "F:\松江OA\OA数据解析\区府办导出数据\批示件\export\leaderApprove"
+    testFilePath = "F:\松江OA\OA数据解析\区府办导出数据\常务会议督查\export\ow"
     #读取文件夹下的文件，将数据存储到数据库(读取收发文数据时，优先读取流程信息并处理)
     # readAllFiles(testFilePath)
     #处理流程步骤信息，将老数据的流程步骤信息解析为单个步骤的信息
@@ -90,16 +120,16 @@ if __name__ == "__main__":
     # handleWorkflowAndOpinion()
     #封装流程处理信息数据
     #工作流标识
-    note = "leaderApprove"
-    # handleWorkflowListData(note)
+    note = "supervision_excutive"
+    handleWorkflowListData(note)
     #处理附件，存储附件信息
     #文件解析路径
-    inputForderName = "F:\松江OA\OA数据解析\区府办导出数据\区府办各模块附件\发文管理"
+    inputForderName = "F:\松江OA\OA数据解析\区府办导出数据\区府办各模块附件\领导批示反馈"
     #文件存储路径
     outputForderName = "D:\OA9Attach\BigFileUpLoadStorage/leaderApprove/feedback/"
-    outputForderName = "D:\OA9Attach\BigFileUpLoadStorage/wd24"
+    # outputForderName = "D:\OA9Attach\BigFileUpLoadStorage/wd24"
     #附件标识
-    tag = "leaderApprove_formal"
+    # tag = "leaderApprove_formal"
     tag = "leaderApprove_feedback"
-    tag = "wd24"
-    handleFile(inputForderName, outputForderName, tag)
+    # tag = "wd24"
+    # handleFile(inputForderName, outputForderName, tag)

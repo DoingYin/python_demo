@@ -127,6 +127,18 @@ def handleRelateLink(relateLinStr):
     relateLink = 'href="../../../../../oa9/archive/forms/wd25/wd25imported?ProcessVersionInstanceGuid=%s"'%relateLinkUnid
     return re.sub('href=.*openDocument', relateLink, relateLinStr)
 
+'''
+    正则表达式获取字符串
+'''
+def getStrByReg(oldStr, reg):
+    pattern = re.compile(reg)
+    if pattern.findall(oldStr):
+        return pattern.findall(oldStr)
+    else:
+        return None
+
+
+
 if __name__ == "__main__":
     # formatStrToTime('2018/7/25 17:30')
     linkStr = '<a href=/egov\Receival.nsf/0/C32D77BD14A4512C4825841C0023C56D?openDocument target=_blank>关于批准松江区2018年第42批次建设项目被征地人员落实就业和社会保障方案的请示</a><br>'
