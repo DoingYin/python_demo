@@ -102,6 +102,7 @@ class ConnectionDatabase(object):
             result = cursor.rowcount
         except Exception as e:
             print(e)
+            print(MsSQL_sql%params)
             self.MsSQL_db.rollback()
             self.MsSQL_db.close()
 

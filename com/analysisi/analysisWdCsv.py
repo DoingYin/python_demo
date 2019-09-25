@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import os
-
+from com.analysisi.utils import Utils
 from com.analysisi.utils import analysisWdCsvUtils
 from com.analysisi.utils import analysisFileAttachUtils
 from com.analysisi.utils import analysisDayScheduleUtils
@@ -19,6 +19,8 @@ def readAllFiles(filePath):
         if os.path.isfile(path):
             file = open(path, 'r', encoding='utf-8')
             print(path)
+            if path.find(".csv") == -1:
+                continue
             #流程记录信息
             if path.find("workflow") != -1:
                 analysisWdCsvUtils.analysisWorkflowCsv(file)
@@ -64,6 +66,12 @@ def handleWorkflow():
     analysisWdCsvUtils.handle_workflow()
 
 '''
+    添加流程处理相关数据
+'''
+def handleArchiveHandleData(tag):
+    analysisWdCsvUtils.addArchiveHandle(tag)
+
+'''
     处理工作和意见信息
 '''
 def handleWorkflowAndOpinion():
@@ -107,29 +115,48 @@ def handleLeaderApproveSignAndFeedback():
     ##处理领导批示件单位签收和反馈情况
     handleSignAndFeedback()
 
+global  testFilePath
+testFilePath = "F:\松江OA\OA数据解析\单位数据\公文交换数据"
+flag = "\收文"
+flag = "\发文"
+testFilePath = testFilePath + flag
+
+global  outputForderName
+outputForderName = "D:\OA9Attach\BigFileUpLoadStorage/"
 if __name__ == "__main__":
     # testFilePath = "G:\数据解析\csv\workflowcsv"
-    testFilePath = "G:\数据解析\csv\wd25csv"
-    testFilePath = "G:\数据解析\csv\opinioncsv"
-    testFilePath = "F:\松江OA\OA数据解析\区府办导出数据\常务会议督查\export\ow"
+    # testFilePath = "G:\数据解析\csv\wd25csv"
+    # testFilePath = "G:\数据解析\csv\opinioncsv"
+    # testFilePath = "F:\松江OA\OA数据解析\单位数据\薛涛\财政局\收文"
     #读取文件夹下的文件，将数据存储到数据库(读取收发文数据时，优先读取流程信息并处理)
-    # readAllFiles(testFilePath)
+    # print(Utils.getUnitBaseOuGUid())
+    # if Utils.getUnitBaseOuGUid() == None:
+    #     exit()
+    readAllFiles(testFilePath)
     #处理流程步骤信息，将老数据的流程步骤信息解析为单个步骤的信息
     # handleWorkflow()
+    #公文需要添加流程处理相关数据
+    if testFilePath.find("收文") != -1:
+        handleTag = 'wd_25'
+    elif testFilePath.find("发文") != -1:
+        handleTag = 'wd_24'
+    else:
+        exit()
+    # handleArchiveHandleData(handleTag)
     #处理流程步骤对应的意见信息
     # handleWorkflowAndOpinion()
     #封装流程处理信息数据
     #工作流标识
-    note = "supervision_excutive"
-    handleWorkflowListData(note)
+    note = Utils.getFirst_alpha(testFilePath) +"_"+ handleTag
+    # handleWorkflowListData(note)
     #处理附件，存储附件信息
     #文件解析路径
-    inputForderName = "F:\松江OA\OA数据解析\区府办导出数据\区府办各模块附件\领导批示反馈"
+    inputForderName = "D:\各单位老数据1\oa导出数据\附件\直接发文"
     #文件存储路径
-    outputForderName = "D:\OA9Attach\BigFileUpLoadStorage/leaderApprove/feedback/"
+    # outputForderName = "D:\OA9Attach\BigFileUpLoadStorage/"
     # outputForderName = "D:\OA9Attach\BigFileUpLoadStorage/wd24"
     #附件标识
     # tag = "leaderApprove_formal"
-    tag = "leaderApprove_feedback"
-    # tag = "wd24"
+    # tag = "leaderApprove_feedback"
+    tag = "wd25"
     # handleFile(inputForderName, outputForderName, tag)

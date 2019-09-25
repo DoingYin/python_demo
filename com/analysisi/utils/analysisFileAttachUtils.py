@@ -8,6 +8,7 @@ from os import stat
 
 from xml.etree import ElementTree
 from com.database.ConnectDataBase import ConnectionDatabase
+from com.analysisi.utils import Utils
 
 '''
     连接数据库
@@ -19,22 +20,33 @@ def getConnect_old():
 '''
     遍历指定目录下的文件
 '''
-def eachfile(filepath, outputfile, tag, conn):
+def eachfile(filepath, conn):
     pathdir = os.listdir(filepath)
     counter = 0
+
+    paths = filepath.split("\\")
+    outputfilepath = None
+    if len(paths) > 6:
+        unitName = paths[5]
+        tag = Utils.getFileTag(filepath)
+        outputfilepath = Utils.getFileOutPutPath(unitName, Utils.getFileTag_ch(filepath))
     for dir in pathdir:
         child = os.path.join('%s\%s' % (filepath, dir))
         if os.path.isfile(child):
             if child.find("basicInfo") != -1:
-                counter =readfile(child, outputfile, tag, conn)
+                counter =readfile(child, outputfilepath, tag, conn)
             continue
-        counter += eachfile(child, outputfile, tag, conn)
+        counter += eachfile(child, conn)
+        if counter % 1000 == 0:
+            conn.commitData()
+    conn.commitData()
     return counter
 
 '''
     解析文件夹下的xml附件信息
 '''
 def readfile(filenames, filepath, tag, __conn):
+    print(filepath)
     counter = 0
     with codecs.open(filenames, 'r', encoding='gbk') as fp:
         text = fp.read().replace('<?xml version="1.0" encoding="GBK"?>', '<?xml version="1.0" encoding="UTF-8"?>')
@@ -99,6 +111,8 @@ def readfile(filenames, filepath, tag, __conn):
             # 插入附件表
             if insertAttachData(__conn, attachinfo):
                 counter += 1
+            if counter % 1000 == 0:
+                __conn.commitData()
         flag = 0
     return  counter
 
@@ -200,7 +214,7 @@ def handleFile(inputForderName, outputForderName, tag):
     #反馈附件
     # tag = "wd24"
 
-    counter = eachfile(inputForderName, outputForderName, tag, __conn)
+    counter = eachfile(inputForderName, __conn)
     print("一共解析附件信息：%d 条。"%counter)
 
     # 关闭连接

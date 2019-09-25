@@ -23,6 +23,12 @@ def getConnect_old():
     __conn = ConnectionDatabase("localhost", "sa", "11111", "oa9History")
     return __conn
 
+#获取发文文号数据
+def getCountFileNumber(__conn, filenumber):
+    # print(filenumber)
+    __sql = "SELECT count(1) FROM wd_24_copy WHERE fawenfilenumber = '%s'"%filenumber
+    return __conn.mssql_findList(__sql)
+
 ############################################ 发文数据 ###############################
 '''
     解析发文数据
@@ -35,8 +41,10 @@ def analysisWd24Csv(file):
     __conn = getConnect_old()
     counter = 0
     for row in csvFile:
-        if len(row) < 34:
-            continue;
+        # print(row)
+        # print(len(row))
+        if len(row) != 37:
+            continue
         wd24 = {}
         wd24['RowGuid'] = str(uuid.uuid1())
         wd24['ProcessVersionInstanceGuid'] = row[0]
@@ -49,6 +57,11 @@ def analysisWd24Csv(file):
             txttitle = re.sub('[\']{1,5}', "”", txttitle)
         wd24['txttitle'] = txttitle
         wd24['FaWenFileNumber'] = row[2]
+        countFilenumber = getCountFileNumber(__conn, row[2])
+        if countFilenumber == None or getCountFileNumber(__conn, row[2])[0][0] > 0:
+            print(row[2], getCountFileNumber(__conn, row[2])[0][0])
+            continue
+
         wd24['JpdFawenYear'] = re.sub('[^0-9]','', row[3])
         wd24['TxtFileNumber'] = re.sub('[^0-9]','', row[4])
         wd24['Ouname'] = row[5]
@@ -88,11 +101,13 @@ def analysisWd24Csv(file):
         wd24["InitUserGuid"] = C_CreateUser
         wd24['JpdGongWenZhongLei'] = row[32]
         wd24['searchLevel'] = row[33]
-        wd24['printNum'] = row[34]
-        wd24['SubWebFlowOuGuid'] = Utils.getSubWebFlowOuGuid('workflows_done', row[0], __conn)
+        wd24['printNum'] = re.sub('[^0-9]','', row[34])
+        if Utils.getUnitBaseOuGUid(row[35]) == None:
+            continue
+        wd24['SubWebFlowOuGuid'] = Utils.getUnitBaseOuGUid(row[35])
         wd24['imported'] = 1
         wd24['DelFlag'] = 0
-
+        # print(wd24)
         if insertWd24(__conn, wd24) > 0:
             counter += 1
         if counter % 1000 == 0:
@@ -126,7 +141,11 @@ def insertWd24(__conn, wd24):
                 wd24['DelFlag'], wd24['JpdGongWenZhongLei'], wd24['searchLevel'], wd24['printNum'], wd24['drafttype'])
     # print(__sql % __params)
     # print(wd24)
-    return __conn.mssql_exe_sql(__sql, __params)
+    try:
+        result = __conn.mssql_exe_sql(__sql, __params)
+    except Exception as e:
+        print(wd24)
+    return result
 
 #################################################### 收文数据 ######################################
 
@@ -141,6 +160,9 @@ def analysisWd25Csv(file):
     __conn = getConnect_old()
     counter = 0
     for row in csvFile:
+        # print(len(row))
+        if len(row) != 26:
+            continue
         # print(row)
         wd25 = {}
         wd25['RowGuid'] = str(uuid.uuid1())
@@ -220,16 +242,16 @@ def analysisWd25Csv(file):
         wd25['attach'] = row[22]
         wd25['bark'] = row[23]
         wd25['Ouname'] = row[24]
-        wd25['imported'] = 1
-        wd25['DelFlag'] = 0
         C_CreateUser = Utils.getInitUserGuid(row[25], __conn)
         wd25['InitUserGuid'] = C_CreateUser
-        wd25['SubWebFlowOuGuid'] = Utils.getSubWebFlowOuGuid('workflows_done', row[0], __conn)
-        if insertWd25(__conn, wd25):
+        wd25['imported'] = 1
+        wd25['DelFlag'] = 0
+        wd25['SubWebFlowOuGuid'] = Utils.getUnitBaseOuGUid()
+        if insertWd25(__conn, wd25) > 0:
             counter += 1
         if counter % 1000 == 0:
             __conn.commitData()
-        print("收文数据已经插入：%d 条。"%counter)
+    print("收文数据已经插入：%d 条。"%counter)
     __conn.commitData()
     __conn.closeConn()
 
@@ -254,7 +276,7 @@ def insertWd25(__conn, wd25):
         wd25['bark'], wd25['imported'], wd25['Ouname'], wd25['InitUserGuid'], wd25['SubWebFlowOuGuid'],
         wd25['DelFlag']
     )
-    # print(__sql % __params)
+
     return __conn.mssql_exe_sql(__sql, __params)
 
 
@@ -272,6 +294,9 @@ def analysisWorkflowCsv(file):
     counter = 0
     for row in csvFile:
         workflow = {}
+        # print(len(row))
+        if len(row) != 9:
+            continue
         workflow['﻿﻿UUID'] = row[0]
         subject = row[1]
         if subject:
@@ -742,6 +767,7 @@ def handleWorkflowListData(note):
     __conn = getConnect_old()
     cursors = __conn.mssql_findList(sql)
     counter = 0
+    begin = time.time()
     for cursor in cursors:
         subject = cursor[1]
         if subject:
@@ -755,7 +781,6 @@ def handleWorkflowListData(note):
         # print(cursor)
         workitemlist = workitemList(__conn, cursor[0], subject, signDate)
         workitemListJson = json.dumps(workitemlist)
-        begin = time.time()
         workflowData = workflowdata(cursor[0], subject, signDate, workitemListJson, note)
         # print(workflowData)
         if (insertWorkflowData(workflowData, __conn)):
@@ -763,10 +788,11 @@ def handleWorkflowListData(note):
             pass
         else:
             break
-        end = time.time()
+
         if counter % 1000 == 0:
             __conn.commitData()
-        print('工作流数据已插入：%d, 用时为：%f' % (counter, end - begin))
+    end = time.time()
+    print('工作流数据已插入：%d, 用时为：%f' % (counter, end - begin))
     __conn.commitData()
     __conn.closeConn()
 
@@ -819,7 +845,7 @@ def workitemList(conn,pviguid, subject,SignDate):
             workitem = workitemdata(workflow)
             workitemlist.append(workitem)
             counter += 1
-            print("流程步骤信息处理了 %d 条。" % counter)
+            # print("流程步骤信息处理了 %d 条。" % counter)
     workitemMap['workitemlist'] = workitemlist
     return workitemMap
 
@@ -899,3 +925,78 @@ def insertWorkflowData(workflowData, __conn):
         workflowData['workitemjson'], workflowData['instancejson'], workflowData['defXml'])
     # print(sql % params)
     return __conn.mssql_exe_sql(sql, params)
+
+####################################### 公文流程处理信息 ##############################################
+'''
+    流程处理信息
+'''
+def getWorkflow_handle(__conn):
+    __sql = '''
+        SELECT UUID,U_UNITNAME,U_UnitUser,U_UnitUserTitle,U_UnitEndTime FROM workflows_done
+    '''
+    return __conn.mssql_findList(__sql)
+
+'''
+    流程处理信息
+'''
+def addArchiveHandle(tag):
+    __conn = getConnect_old()
+    records = getWorkflow_handle(__conn)
+    counter = 0
+    for record in records:
+        workflowhandle = {}
+        workflowhandle['rowguid'] = str(uuid.uuid1())
+        workflowhandle['archiveRowguid'] = record[0]
+        workflowhandle['archiveType'] = tag
+        workflowhandle['processversionInstanceGuid'] = record[0]
+        workflowhandle['activityName'] = record[1]
+        userGuidStr = record[2]
+        # print(userGuidStr)
+        #默认为系统管理员
+        userGuid = '45f0c5f9-cad2-49e6-887d-b38dfcbc23de'
+        if userGuidStr:
+            userGuid = Utils.getInitUserGuid(userGuidStr, __conn)
+            if not userGuid:
+                userGuid = userGuidStr
+        workflowhandle['HandleUserGuid'] = userGuid
+        workflowhandle['handleUserName'] = record[3]
+        workflowhandle['HandleUserOUGuid'] = Utils.getUnitBaseOuGUid()
+        workflowhandle['isdone'] = "1"
+        #标识为历史数据
+        workflowhandle['frominducestate'] = "1"
+        if record[2] == '办理完毕':
+            workflowhandle['isdone'] = "1"
+        doneDateStr = record[4]
+        if doneDateStr:
+            doneDate = Utils.formatStrToTime(doneDateStr)
+            if doneDate:
+                doneDateStr = Utils.fromatTimeToStr(doneDate, '%Y-%m-%d %H:%M:%S')
+            else:
+                doneDateStr = None
+        else:
+            doneDateStr = None
+        workflowhandle['donedate'] = doneDateStr
+        if insertWorkflowHandle(workflowhandle, __conn) > 0:
+            counter += 1
+            print('流程处理信息已经添加：%d 条'%counter)
+        if counter % 1000 == 0:
+            pass
+            __conn.commitData()
+    __conn.commitData()
+    __conn.closeConn()
+
+'''
+    添加流程处理信息
+'''
+def insertWorkflowHandle(workflowhandle, __conn):
+    __sql = '''
+        INSERT INTO archive_handle(rowguid, archiveRowguid, archiveType, processversionInstanceGuid, 
+            activityName, HandleUserGuid, handleUserName, isdone, donedate, frominducestate, HandleUserOUGuid) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    '''
+    __params = (workflowhandle['rowguid'], workflowhandle['archiveRowguid'], workflowhandle['archiveType'],
+                workflowhandle['processversionInstanceGuid'], workflowhandle['activityName'], workflowhandle['HandleUserGuid'],
+                workflowhandle['handleUserName'], workflowhandle['isdone'], workflowhandle['donedate'],
+                workflowhandle['frominducestate'], workflowhandle['HandleUserOUGuid'])
+    # print(__sql%__params)
+    return __conn.mssql_exe_sql(__sql, __params)
